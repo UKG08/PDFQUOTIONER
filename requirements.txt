@@ -1,11 +1,6 @@
-flask
-flask-cors
-pdfplumber
-python-dotenv
-langchain
-langchain-community
-langchain-groq
-sentence-transformers
-faiss-cpu
-numpy
-gunicorn
+Flask==3.0.3
+Flask-Cors==4.0.1
+python-dotenv==1.0.1
+PyPDF2==3.0.1
+groq==0.8.0
+Werkzeug==3.0.3
