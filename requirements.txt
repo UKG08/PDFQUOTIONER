@@ -2,11 +2,11 @@ Flask==3.0.3
 Flask-Cors==4.0.1
 pdfplumber==0.11.1
 python-dotenv==1.0.1
-langchain-groq==0.1.7
-langchain-community==0.2.7 # Required by langchain-groq and HuggingFaceEmbeddings
-langchain-core==0.2.11 # Core components for LangChain
-langchain==0.2.7 # Main langchain package
-sentence-transformers==2.7.0 # Dependency for HuggingFaceEmbeddings (though it's often pulled in by langchain-community)
+langchain-groq==0.1.8  
+langchain-community==0.2.7
+langchain-core==0.2.11
+langchain==0.2.7
+sentence-transformers==2.7.0
 faiss-cpu==1.8.0
 numpy==1.26.4
-gunicorn==22.0.0 # Essential for production deployment (e.g., on Render, PythonAnywhere)
+gunicorn==22.0.0
