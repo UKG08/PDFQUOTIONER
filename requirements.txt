@@ -1,14 +1,15 @@
-Flask==3.0.3
-Flask-Cors==4.0.1
-pdfplumber==0.11.1
-python-dotenv==1.0.1
+Flask
+Flask-Cors
+pdfplumber
+python-dotenv
 
-langchain==0.1.16
-langchain-core==0.1.31
-langchain-community==0.0.26
-langchain-groq==0.1.8
+langchain
+langchain-core
+langchain-community
+langchain-groq
 
-sentence-transformers==2.7.0
-faiss-cpu==1.8.0
-numpy==1.26.4
-gunicorn==22.0.0
+sentence-transformers
+faiss-cpu
+numpy
+
+gunicorn
