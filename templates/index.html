@@ -10,11 +10,12 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            overflow: hidden; /* Prevent body scroll if content fits */
+            /* Removed overflow: hidden to allow natural scrolling on smaller screens */
         }
         .shadow-custom-blue {
             box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.00), 0px 0px 0px 0px rgba(0,0,0,0.00), 0px 10px 15px -3px rgba(59,130,246,0.20), 0px 4px 6px -4px rgba(59,130,246,0.20);
         }
+        /* Scrollbar hide utility */
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
@@ -22,11 +23,17 @@
             -ms-overflow-style: none; /* IE and Edge */
             scrollbar-width: none; /* Firefox */
         }
+        /* Added for active style of radio buttons */
+        .style-radio-btn.active-style {
+            background-color: #3b82f6; /* Tailwind blue-600 */
+            color: white;
+        }
     </style>
 </head>
-<body class="w-full h-screen relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 flex text-white">
+<body class="w-full min-h-screen relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 flex flex-col md:flex-row text-white">
 
-    <div class="w-96 h-full bg-slate-800/50 border-r border-white/10 flex-shrink-0 flex flex-col p-5">
+    <div class="w-full h-auto p-4 border-b border-white/10 flex-shrink-0 flex flex-col
+                md:w-96 md:h-screen md:p-5 md:border-r md:border-b-0 bg-slate-800/50">
         <div class="flex items-center mb-10">
             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-custom-blue mr-3">
                 <div class="text-white text-base font-bold font-['Inter'] leading-7">P</div>
@@ -46,7 +53,7 @@
             </button>
         </div>
 
-        <div id="drop-area" class="w-80 h-44 rounded-xl outline outline-2 outline-offset-[-2px] outline-white/10 p-6 flex flex-col items-center justify-center relative mb-8 cursor-pointer hover:bg-slate-700/30 transition-colors duration-200">
+        <div id="drop-area" class="w-full h-44 rounded-xl outline outline-2 outline-offset-[-2px] outline-white/10 p-6 flex flex-col items-center justify-center relative mb-8 cursor-pointer hover:bg-slate-700/30 transition-colors duration-200">
             <div class="w-16 h-16 bg-blue-900/30 rounded-2xl flex items-center justify-center mb-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h10a2 2 0 012 2v4m-6 4H7a2 2 0 00-2 2v4a2 2 0 002 2h10a2 2 0 002-2v-4a2 2 0 00-2-2z" />
@@ -74,14 +81,14 @@
         </button>
     </div>
 
-    <div class="flex-grow flex flex-col items-center justify-center p-8 overflow-hidden">
-        <div class="w-[768px] max-w-full flex flex-col h-full">
+    <div class="flex-grow flex flex-col items-center p-4 md:p-8 overflow-y-auto scrollbar-hide">
+        <div class="w-full md:w-[768px] max-w-full flex flex-col h-full">
             <h1 class="text-white text-2xl font-semibold font-['Inter'] leading-9 mb-2">Summarize Your PDFs</h1>
             <p class="text-slate-300 text-sm font-normal font-['Inter'] leading-normal mb-2">Upload PDFs on the left and get concise summaries in seconds</p>
 
             <div id="status-message" class="text-center py-2 px-4 rounded-lg text-sm mb-4 transition-opacity duration-300 opacity-0 hidden"></div>
 
-            <div id="chat-history-display" class="flex-grow bg-slate-800/30 rounded-xl outline outline-1 outline-offset-[-1px] outline-white/5 p-6 mb-4 overflow-y-auto scrollbar-hide flex flex-col">
+            <div id="chat-history-display" class="flex-grow bg-slate-800/30 rounded-xl outline outline-1 outline-offset-[-1px] outline-white/5 p-6 mb-4 overflow-y-auto scrollbar-hide flex flex-col min-h-[200px]">
                 <div id="initial-chat-message" class="flex flex-col items-center justify-center text-center text-slate-400 h-full">
                     <div class="w-16 h-16 bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -96,8 +103,7 @@
             </div>
 
             <div class="w-full">
-                <div class="flex space-x-2 mb-4">
-                    <button class="style-radio-btn px-4 py-2 bg-slate-800/50 rounded-lg text-slate-500 text-xs font-medium font-['Inter'] leading-tight transition-colors duration-200 active-style" data-style="detailed">Detailed</button>
+                <div class="flex flex-wrap gap-2 mb-4"> <button class="style-radio-btn px-4 py-2 bg-slate-800/50 rounded-lg text-slate-500 text-xs font-medium font-['Inter'] leading-tight transition-colors duration-200 active-style" data-style="detailed">Detailed</button>
                     <button class="style-radio-btn px-4 py-2 bg-slate-800/50 rounded-lg text-slate-500 text-xs font-medium font-['Inter'] leading-tight transition-colors duration-200" data-style="concise">Concise</button>
                     <button class="style-radio-btn px-4 py-2 bg-slate-800/50 rounded-lg text-slate-500 text-xs font-medium font-['Inter'] leading-tight transition-colors duration-200" data-style="key points">Key Points</button>
                 </div>
@@ -345,13 +351,13 @@
         // Response Style selection
         styleRadioBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                styleRadioBtns.forEach(b => b.classList.remove('active-style', 'bg-blue-600', 'text-white'));
-                btn.classList.add('active-style', 'bg-blue-600', 'text-white');
+                styleRadioBtns.forEach(b => b.classList.remove('active-style')); // Removed bg-blue-600, text-white
+                btn.classList.add('active-style'); // Class defined in custom style for consistent look
                 selectedResponseStyle = btn.dataset.style;
             });
         });
         // Set initial active style for the first button
-        document.querySelector('.style-radio-btn[data-style="detailed"]').classList.add('active-style', 'bg-blue-600', 'text-white');
+        document.querySelector('.style-radio-btn[data-style="detailed"]').classList.add('active-style');
 
 
         // UI Update Functions
