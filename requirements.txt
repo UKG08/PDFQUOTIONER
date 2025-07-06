@@ -1,15 +1,11 @@
-Flask
-Flask-Cors
+flask
+flask-cors
 pdfplumber
 python-dotenv
-
 langchain
-langchain-core
 langchain-community
 langchain-groq
-
 sentence-transformers
 faiss-cpu
 numpy
-
 gunicorn
