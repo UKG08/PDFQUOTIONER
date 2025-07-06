@@ -99,11 +99,9 @@ def chat_question():
         return jsonify({"error": "No PDFs processed for this session. Please upload PDFs."}), 400
 
     try:
-        MAX_CONTEXT_CHARS = 7000 # Keep this in mind for the model's context window
+        MAX_CONTEXT_CHARS = 7000
 
         relevant_context = ""
-        # Prioritize recent chunks or a sophisticated retrieval method here.
-        # For this example, we'll continue to just concatenate up to the limit.
         for chunk in pdf_chunks:
             if len(relevant_context) + len(chunk) < MAX_CONTEXT_CHARS:
                 relevant_context += chunk + "\n\n"
@@ -111,10 +109,8 @@ def chat_question():
                 break
 
         if not relevant_context:
-            relevant_context = "No sufficient context could be retrieved from the documents for this question." # More specific fallback
+            relevant_context = "No sufficient context could be retrieved from the documents for this question."
 
-        # --- VERY GOOD PROMPT START ---
-        # Base system prompt: Sets the core behavior
         base_system_prompt = (
             "You are PDFER, an intelligent AI assistant designed to help users understand their PDF documents. "
             "Your primary goal is to provide accurate, comprehensive, and helpful answers **strictly based on the information provided in the document context below.**\n\n"
@@ -126,7 +122,6 @@ def chat_question():
             "5.  **Avoid Redundancy:** Do not repeat information unnecessarily."
         )
 
-        # Style-specific instructions: Layered on top of the base rules
         style_instruction = ""
         if response_style == "detailed":
             style_instruction = (
@@ -144,19 +139,12 @@ def chat_question():
                 "Extract and present the core information as a bulleted list of key points. Each bullet point should capture a distinct and important piece of information related to the question. Do not write full paragraphs; use short, impactful phrases or sentences."
             )
 
-        # Construct the final system message
         final_system_message = f"{base_system_prompt}\n\n{style_instruction}"
 
-        # Prepare messages for Groq API
         messages = [
             {"role": "system", "content": final_system_message},
-            # Optionally, add recent chat history here to maintain conversation flow
-            # For example:
-            # * for turn in chat_history[-k:]: (where k is number of previous turns to include)
-            # * messages.append({"role": turn.role, "content": turn.content})
             {"role": "user", "content": f"Here is the document context you must use to answer my question:\n\n---\n{relevant_context}\n---\n\nMy question is: {question}\n\nBased ONLY on the provided document context, please provide the best possible answer according to the specified style."}
         ]
-        # --- VERY GOOD PROMPT END ---
 
         chat_completion = client.chat.completions.create(
             messages=messages,
@@ -184,5 +172,9 @@ def clear_cache():
         return jsonify({"message": "PDF memory cleared and session reset."}), 200
     return jsonify({"message": "No active session to clear or session already cleared."}), 200
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Remove the __main__ block if you are using Gunicorn (recommended for Render)
+# if __name__ == '__main__':
+#     # For local development:
+#     # Flask's built-in server is NOT for production
+#     port = int(os.environ.get("PORT", 5000))
+#     app.run(debug=True, host='0.0.0.0', port=port)
