@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDFER - AI-Powered Document Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevent body scroll if content fits */
+        }
+        .shadow-custom-blue {
+            box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.00), 0px 0px 0px 0px rgba(0,0,0,0.00), 0px 10px 15px -3px rgba(59,130,246,0.20), 0px 4px 6px -4px rgba(59,130,246,0.20);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+    </style>
+</head>
+<body class="w-full h-screen relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 flex text-white">
+
+    <div class="w-96 h-full bg-slate-800/50 border-r border-white/10 flex-shrink-0 flex flex-col p-5">
+        <div class="flex items-center mb-10">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-custom-blue mr-3">
+                <div class="text-white text-base font-bold font-['Inter'] leading-7">P</div>
+            </div>
+            <div>
+                <div class="text-black text-xl font-bold font-['Inter'] leading-loose bg-gradient-to-r from-blue-400 to-purple-500 inline-block text-transparent bg-clip-text">PDFER</div>
+                <div class="text-slate-400 text-xs font-normal font-['Inter'] leading-tight">AI-Powered Document Analysis</div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-5">
+            <div class="text-white/90 text-base font-semibold font-['Inter'] leading-7">Documents</div>
+            <button id="add-document-btn" class="w-8 h-8 bg-black/0 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+            </button>
+        </div>
+
+        <div id="drop-area" class="w-80 h-44 rounded-xl outline outline-2 outline-offset-[-2px] outline-white/10 p-6 flex flex-col items-center justify-center relative mb-8 cursor-pointer hover:bg-slate-700/30 transition-colors duration-200">
+            <div class="w-16 h-16 bg-blue-900/30 rounded-2xl flex items-center justify-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h10a2 2 0 012 2v4m-6 4H7a2 2 0 00-2 2v4a2 2 0 002 2h10a2 2 0 002-2v-4a2 2 0 00-2-2z" />
+                </svg>
+            </div>
+            <div class="text-white/80 text-xs font-medium font-['Inter'] leading-tight mb-1">Drop your PDFs here</div>
+            <div class="flex items-center text-[10.20px] font-normal font-['Inter'] leading-none">
+                <span class="text-slate-400 mr-1">or</span>
+                <label for="pdf-upload-input" class="cursor-pointer text-blue-400 font-medium hover:underline">browse files</label>
+                <input type="file" accept=".pdf" id="pdf-upload-input" class="hidden" multiple>
+            </div>
+        </div>
+
+        <div class="flex-grow flex flex-col overflow-y-auto scrollbar-hide">
+            <div class="flex items-center mb-3">
+                <span id="num-documents" class="text-slate-400 text-xs font-medium font-['Inter'] leading-tight">0 documents</span>
+            </div>
+            <div id="document-list-container" class="flex-grow flex items-center justify-center text-center text-slate-500 text-xs font-normal font-['Inter'] leading-tight">
+                No documents uploaded yet
+            </div>
+            </div>
+
+        <button id="clear-cache-btn" class="mt-4 px-4 py-2 bg-red-600/50 rounded-lg text-white font-semibold hover:bg-red-700/50 transition-colors duration-200">
+            🧹 Clear Session & PDFs
+        </button>
+    </div>
+
+    <div class="flex-grow flex flex-col items-center justify-center p-8 overflow-hidden">
+        <div class="w-[768px] max-w-full flex flex-col h-full">
+            <h1 class="text-white text-2xl font-semibold font-['Inter'] leading-9 mb-2">Summarize Your PDFs</h1>
+            <p class="text-slate-300 text-sm font-normal font-['Inter'] leading-normal mb-2">Upload PDFs on the left and get concise summaries in seconds</p>
+
+            <div id="status-message" class="text-center py-2 px-4 rounded-lg text-sm mb-4 transition-opacity duration-300 opacity-0 hidden"></div>
+
+            <div id="chat-history-display" class="flex-grow bg-slate-800/30 rounded-xl outline outline-1 outline-offset-[-1px] outline-white/5 p-6 mb-4 overflow-y-auto scrollbar-hide flex flex-col">
+                <div id="initial-chat-message" class="flex flex-col items-center justify-center text-center text-slate-400 h-full">
+                    <div class="w-16 h-16 bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h10a2 2 0 012 2v4m-6 4H7a2 2 0 00-2 2v4a2 2 0 002 2h10a2 2 0 002-2v-4a2 2 0 00-2-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-white text-base font-semibold font-['Inter'] leading-7 mb-2">No Documents Yet</h3>
+                    <p class="text-slate-400 text-sm font-normal font-['Inter'] leading-normal">
+                        Upload your PDF documents to get started with <span class="font-semibold text-blue-300">AI-powered</span> summaries and insights
+                    </p>
+                </div>
+                </div>
+
+            <div class="w-full">
+                <div class="flex space-x-2 mb-4">
+                    <button class="style-radio-btn px-4 py-2 bg-slate-800/50 rounded-lg text-slate-500 text-xs font-medium font-['Inter'] leading-tight transition-colors duration-200 active-style" data-style="detailed">Detailed</button>
+                    <button class="style-radio-btn px-4 py-2 bg-slate-800/50 rounded-lg text-slate-500 text-xs font-medium font-['Inter'] leading-tight transition-colors duration-200" data-style="concise">Concise</button>
+                    <button class="style-radio-btn px-4 py-2 bg-slate-800/50 rounded-lg text-slate-500 text-xs font-medium font-['Inter'] leading-tight transition-colors duration-200" data-style="key points">Key Points</button>
+                </div>
+
+                <div class="w-full h-14 bg-slate-800/30 rounded-xl outline outline-1 outline-offset-[-1px] outline-slate-700/50 flex items-center pr-2 relative">
+                    <input type="text" id="user-question-input" placeholder="Upload a PDF to get started..." class="flex-grow bg-transparent border-none outline-none text-stone-300 text-base font-normal font-['Inter'] leading-normal pl-5 pr-12" disabled>
+                    <button id="send-question-btn" class="w-9 h-9 flex items-center justify-center text-slate-600 hover:text-blue-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000'; // Flask backend URL
+
+        let currentUserSessionId = null; // To store a session ID if your backend manages them
+        let selectedResponseStyle = "detailed"; // Default style
+        let processing = false; // Flag to prevent multiple simultaneous processing requests
+        let messageTimeout; // To clear the status message after a delay
+
+        const dropArea = document.getElementById('drop-area');
+        const pdfUploadInput = document.getElementById('pdf-upload-input');
+        const addDocumentBtn = document.getElementById('add-document-btn');
+        const numDocumentsSpan = document.getElementById('num-documents');
+        const documentListContainer = document.getElementById('document-list-container');
+        const clearCacheBtn = document.getElementById('clear-cache-btn');
+        const userQuestionInput = document.getElementById('user-question-input');
+        const sendQuestionBtn = document.getElementById('send-question-btn');
+        const chatHistoryDisplay = document.getElementById('chat-history-display');
+        const initialChatMessage = document.getElementById('initial-chat-message');
+        const styleRadioBtns = document.querySelectorAll('.style-radio-btn');
+        const statusMessageDiv = document.getElementById('status-message'); // New element
+
+        // Initial state update
+        updateUIForProcessingState(false);
+        updateDocumentList([]);
+
+        // Event Listeners for file upload (drag & drop)
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('outline-blue-400'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('outline-blue-400'), false);
+        });
+
+        dropArea.addEventListener('drop', handleDrop, false);
+        pdfUploadInput.addEventListener('change', handleFileInputChange);
+        addDocumentBtn.addEventListener('click', () => pdfUploadInput.click()); // Trigger hidden input
+
+        // Process button functionality
+        async function processPdfs(files) {
+            if (processing) return; // Prevent multiple clicks
+
+            if (files.length === 0) {
+                showMessage("Please select one or more PDF files to process.", "error");
+                return;
+            }
+
+            processing = true;
+            updateUIForProcessingState(true);
+            initialChatMessage.style.display = 'none'; // Hide initial message
+            chatHistoryDisplay.innerHTML = ''; // Clear chat history to show processing message clearly
+
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('pdfs', file);
+            }
+
+            try {
+                showMessage("⏳ Processing PDFs... This might take a moment.", "info");
+                const response = await fetch(`${API_BASE_URL}/process_pdfs`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    currentUserSessionId = data.user_id; // Store session ID
+                    // MODIFIED LINE: Changed the success message to be more user-friendly
+                    showMessage(`Successfully processed ${data.processed_files.length} PDF(s). You can now ask questions!`, "success");
+                    updateDocumentList(Array.from(files));
+                    updateUIForProcessingState(false);
+                    userQuestionInput.placeholder = "Ask something from your PDFs...";
+                } else {
+                    showMessage(`Error processing PDFs: ${data.error}`, "error"); // Use custom message
+                    updateUIForProcessingState(false);
+                    updateDocumentList([]); // Clear document list on error
+                    initialChatMessage.style.display = 'flex'; // Show initial message
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('An error occurred while connecting to the backend. Please ensure the backend is running.', "error"); // Use custom message
+                updateUIForProcessingState(false);
+                updateDocumentList([]); // Clear document list on error
+                initialChatMessage.style.display = 'flex'; // Show initial message
+            } finally {
+                processing = false;
+            }
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            processPdfs(Array.from(files));
+        }
+
+        function handleFileInputChange(e) {
+            const files = e.target.files;
+            processPdfs(Array.from(files));
+        }
+
+        // Handle sending user question
+        sendQuestionBtn.addEventListener('click', sendQuestion);
+        userQuestionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendQuestion();
+            }
+        });
+
+        async function sendQuestion() {
+            const question = userQuestionInput.value.trim();
+            if (!question) return;
+            if (!currentUserSessionId) {
+                showMessage("Please process PDF documents first.", "warning");
+                return;
+            }
+
+            appendMessage(question, 'user');
+            userQuestionInput.value = '';
+            sendQuestionBtn.disabled = true;
+            userQuestionInput.disabled = true;
+
+            try {
+                // Show a brief loading indicator in the chat area
+                const loadingMessageDiv = document.createElement('div');
+                loadingMessageDiv.id = 'loading-indicator';
+                loadingMessageDiv.className = 'text-center text-blue-400 mb-4';
+                loadingMessageDiv.innerHTML = 'Thinking...'; // You can add a spinner icon here if you want
+                chatHistoryDisplay.appendChild(loadingMessageDiv);
+                chatHistoryDisplay.scrollTop = chatHistoryDisplay.scrollHeight;
+
+                const response = await fetch(`${API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        response_style: selectedResponseStyle,
+                        user_id: currentUserSessionId
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    appendMessage(data.answer, 'bot');
+                } else {
+                    appendMessage(`Error: ${data.error}`, 'bot');
+                    showMessage(`Chat error: ${data.error}`, "error");
+                }
+            } catch (error) {
+                console.error('Error sending question:', error);
+                appendMessage('An error occurred while communicating with the AI. Please try again.', 'bot');
+                showMessage('Network error during chat. Check console.', "error");
+            } finally {
+                sendQuestionBtn.disabled = false;
+                userQuestionInput.disabled = false;
+                const loader = document.getElementById('loading-indicator');
+                if (loader) {
+                    loader.remove(); // Remove loading indicator
+                }
+            }
+        }
+
+        // Chat message display
+        function appendMessage(message, sender) {
+            const messageContainer = document.createElement('div');
+            // Ensure messages stack correctly at the bottom by ensuring parent is flex-col with flex-grow
+            messageContainer.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} mb-4 w-full`;
+
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `max-w-[70%] p-3 rounded-lg ${
+                sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-100'
+            }`;
+            messageBubble.innerText = message;
+
+            messageContainer.appendChild(messageBubble);
+            chatHistoryDisplay.appendChild(messageContainer);
+
+            // Hide initial message once chat starts
+            if (initialChatMessage.style.display !== 'none') {
+                initialChatMessage.style.display = 'none';
+            }
+            chatHistoryDisplay.scrollTop = chatHistoryDisplay.scrollHeight; // Scroll to bottom
+        }
+
+        // Clear Cache functionality
+        clearCacheBtn.addEventListener('click', async () => {
+            // No confirm dialog, just proceed and show message
+            try {
+                showMessage("Clearing session...", "info");
+                const response = await fetch(`${API_BASE_URL}/clear_cache`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: currentUserSessionId || "default_user" })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage(data.message, "success"); // Use custom message
+                    currentUserSessionId = null; // Clear session ID on frontend
+                    chatHistoryDisplay.innerHTML = ''; // Clear chat display
+                    initialChatMessage.style.display = 'flex'; // Show initial message
+                    updateDocumentList([]); // Clear document list
+                    updateUIForProcessingState(false);
+                    userQuestionInput.placeholder = "Upload a PDF to get started...";
+                } else {
+                    showMessage(`Error clearing session: ${data.error}`, "error"); // Use custom message
+                }
+            } catch (error) {
+                console.error('Error clearing cache:', error);
+                showMessage('An error occurred while trying to clear the backend cache (network error).', "error"); // Use custom message
+            }
+        });
+
+        // Response Style selection
+        styleRadioBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                styleRadioBtns.forEach(b => b.classList.remove('active-style', 'bg-blue-600', 'text-white'));
+                btn.classList.add('active-style', 'bg-blue-600', 'text-white');
+                selectedResponseStyle = btn.dataset.style;
+            });
+        });
+        // Set initial active style for the first button
+        document.querySelector('.style-radio-btn[data-style="detailed"]').classList.add('active-style', 'bg-blue-600', 'text-white');
+
+
+        // UI Update Functions
+        function updateUIForProcessingState(isProcessing) {
+            userQuestionInput.disabled = isProcessing || !currentUserSessionId;
+            sendQuestionBtn.disabled = isProcessing || !currentUserSessionId;
+            dropArea.classList.toggle('pointer-events-none', isProcessing);
+            dropArea.classList.toggle('opacity-50', isProcessing);
+            addDocumentBtn.disabled = isProcessing;
+            clearCacheBtn.disabled = isProcessing;
+
+            if (isProcessing) {
+                numDocumentsSpan.innerText = "Processing...";
+                // No need for message in chat area, statusMessageDiv handles it now
+            } else {
+                 if (!currentUserSessionId) {
+                     userQuestionInput.placeholder = "Upload a PDF to get started...";
+                 }
+            }
+        }
+
+        function updateDocumentList(files) {
+            numDocumentsSpan.innerText = `${files.length} document${files.length === 1 ? '' : 's'}`;
+            documentListContainer.innerHTML = ''; // Clear previous list
+
+            if (files.length === 0) {
+                documentListContainer.classList.add('flex', 'items-center', 'justify-center');
+                documentListContainer.innerText = 'No documents uploaded yet';
+            } else {
+                documentListContainer.classList.remove('flex', 'items-center', 'justify-center');
+                const ul = document.createElement('ul');
+                ul.className = 'list-disc list-inside text-sm text-slate-300';
+                files.forEach(file => {
+                    const li = document.createElement('li');
+                    li.innerText = file.name;
+                    ul.appendChild(li);
+                });
+                documentListContainer.appendChild(ul);
+            }
+        }
+
+        // Function to display messages
+        function showMessage(message, type = "info", duration = 3000) {
+            clearTimeout(messageTimeout); // Clear any existing timeout
+            statusMessageDiv.textContent = message;
+            statusMessageDiv.classList.remove('hidden', 'opacity-0', 'bg-green-600', 'bg-red-600', 'bg-blue-600', 'bg-orange-500'); // Remove previous states
+
+            if (type === "success") {
+                statusMessageDiv.classList.add('bg-green-600', 'text-white');
+            } else if (type === "error") {
+                statusMessageDiv.classList.add('bg-red-600', 'text-white');
+            } else if (type === "warning") {
+                statusMessageDiv.classList.add('bg-orange-500', 'text-white');
+            } else { // info
+                statusMessageDiv.classList.add('bg-blue-600', 'text-white');
+            }
+
+            statusMessageDiv.classList.remove('opacity-0');
+            statusMessageDiv.classList.add('opacity-100');
+            statusMessageDiv.classList.remove('hidden');
+
+            messageTimeout = setTimeout(() => {
+                statusMessageDiv.classList.remove('opacity-100');
+                statusMessageDiv.classList.add('opacity-0');
+                // Hide after transition ends (adjust duration as needed)
+                setTimeout(() => {
+                    statusMessageDiv.classList.add('hidden');
+                    statusMessageDiv.textContent = ''; // Clear content
+                }, 300); // Should match CSS transition duration
+            }, duration);
+        }
+
+    </script>
+</body>
+</html>
